@@ -15,8 +15,6 @@ app.use(bodyParser.json());
 
 //Create Todos
 app.post('/todos', (req, res) => {
-    console.log(req.body);
-
     var todo = new Todo({
         todo: req.body.todo
     });
@@ -25,12 +23,15 @@ app.post('/todos', (req, res) => {
         res.send(doc);
     }, (err) => {
         res.status(400).send(err);
-        console.log('Unable to add todos', err)
+        //console.log('Unable to add todos', err)
     });
 });
-
 
 //Server
 app.listen(port, () => {
     console.log(`Server listening on port ${port}...`);
 });
+
+module.exports = {
+    app
+};
