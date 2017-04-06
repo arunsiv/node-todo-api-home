@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 
 //Routes
 
-//Create Todos
+//Create todos
 app.post('/todos', (req, res) => {
     var todo = new Todo({
         todo: req.body.todo
@@ -23,7 +23,18 @@ app.post('/todos', (req, res) => {
         res.send(doc);
     }, (err) => {
         res.status(400).send(err);
-        //console.log('Unable to add todos', err)
+    });
+});
+
+//Get all todos
+app.get('/todos', (req, res) => {
+    //get all todos
+    Todo.find().then((todos) => {
+        res.send({
+            todos
+        });
+    }, (err) => {
+        res.status(400).send(err);
     });
 });
 
