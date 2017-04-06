@@ -1,59 +1,36 @@
-var mongoose = require('mongoose');
+var express = require('express');
+var bodyParser = require('body-parser');
 
-mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost:27017/TodoApp');
+var {mongoose} = require('./db/mongoose');
+var {Todo} = require('./models/todo');
+var {User} = require('./models/user');
 
-// Creating a model for Todos with attributes
-var Todo = mongoose.model('Todos', {
-    todo: {
-        type: String,
-        required: true,
-        minLength: 4,
-        trim: true
-    },
-    completed: {
-        type: Boolean,
-        default: false
-    },
-    completedAt: {
-        type: Number,
-        default: null
-    }
+var app = express();
+var port = process.env.PORT || 3000;
+
+//Middleware
+app.use(bodyParser.json());
+
+//Routes
+
+//Create Todos
+app.post('/todos', (req, res) => {
+    console.log(req.body);
+
+    var todo = new Todo({
+        todo: req.body.todo
+    });
+
+    todo.save().then((doc) => {
+        res.send(doc);
+    }, (err) => {
+        res.status(400).send(err);
+        console.log('Unable to add todos', err)
+    });
 });
 
-var User = mongoose.model('Users', {
-    email: {
-        type: String,
-        required: true,
-        minLength: 4,
-        trim: true
-    }
-});
 
-//Instantiating a new model
-// var newTodo = new Todo({
-//     todo: 'Eat Breakfast',
-//     completed: false,
-//     completedAt: 345
-// });
-
-var newUser = new User({
-    email: 'test@test.com'
-});
-
-//Saving to DB
-// newTodo.save().then((doc) => {
-//     console.log(JSON.stringify(doc, undefined, 4));
-// }, (err) => {
-//     if (err) {
-//         console.log('Error in save...');
-//     }
-// });
-
-newUser.save().then((doc) => {
-    console.log(JSON.stringify(doc, undefined, 4));
-}, (err) => {
-    if (err) {
-        console.log('Error in save...', err);
-    }
+//Server
+app.listen(port, () => {
+    console.log(`Server listening on port ${port}...`);
 });
