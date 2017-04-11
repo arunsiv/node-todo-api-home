@@ -171,8 +171,7 @@ describe('PATCH /todos/:id', () => {
     it('should update the todo', (done) => {
         var hexId = new ObjectID(todoTestData[0]._id).toHexString();
         var todoText = 'Im Batman';
-        var time = new Date().getTime();
-
+ 
         request(app)
             .patch(`/todos/${hexId}`)
             .send({
