@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const jwt = require('jsonwebtoken');
+const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
-var User = mongoose.model('Users', {
+var UserSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
@@ -29,6 +32,78 @@ var User = mongoose.model('Users', {
         }
     }]
 });
+
+//Overriding Mongoose's toJSON instance method so that it only return
+//the properties we want instead of all the properties.
+UserSchema.methods.toJSON = function() {
+    var user = this;
+    var userObject = user.toObject();
+
+    return _.pick(userObject, ['_id', 'email']);
+};
+
+//Create a custom instance method to generate access and token
+//while creating a new user.
+UserSchema.methods.generateAuthToken = function () {
+    var user = this;
+    var access = 'auth';
+    var token = jwt.sign({
+        _id: user._id.toHexString(),
+        access
+    }, 'secretvalue').toString();
+
+    user.tokens.push({
+        access,
+        token
+    });
+
+    return user.save().then(() => {
+        return token;
+    });
+
+};
+
+//Create a custom model method for fetching user based on token
+UserSchema.statics.findByToken = function(token) {
+    var User = this;
+    var decoded;
+
+    try {
+        decoded = jwt.verify(token, 'secretvalue');
+    } catch (e) {
+        // return new Promise((resolve, reject) => {
+        //     reject();
+        // });
+
+        return Promise.reject();
+    }
+
+    return User.findOne({
+        '_id': decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
+    });
+
+};
+
+//Mongoose Middleware which runs before every time a model is saved
+UserSchema.pre('save', function (next) {
+    var user = this;
+
+    if (user.isModified('password')) {
+        bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.hash(user.password, salt, (err, hash) => {
+                user.password = hash;
+                next();
+            });
+        });
+    } else {
+        next();
+    }
+});
+
+
+var User = mongoose.model('Users', UserSchema);
 
 module.exports = {
     User
